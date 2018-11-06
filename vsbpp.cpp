@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <bits/stdc++.h>
+#include <random>
 using namespace std;
 
 #define DEBUG 0
@@ -17,8 +18,6 @@ typedef struct move_info
     int i;
     int j;
 } move_tabu;
-
-
 
 
 /**********************************************************************
@@ -662,6 +661,30 @@ int main(int argc, const char * argv[])
     int val = 0;
 
     printAllSubsets(weight, items, bin_for_subsetsum, items_in_bins);
+
+    // limpa o vetor individuo
+    individuo.clear();
+
+    // insere uma sequencia aleatoria do subsetsum no individuo.
+    int qtd_combinacoes = items_in_bins.size();
+
+    int min = 0;
+    int max = qtd_combinacoes;
+    std::random_device rd;     // only used once to initialise (seed) engine
+    std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+    std::uniform_int_distribution<int> uni(min,max); // guaranteed unbiased
+
+    int random_integer = uni(rng);
+
+    cout << "random_integer = " << random_integer << endl;
+    for(int j = 0; j < items_in_bins[random_integer].size(); j++)
+    {
+        cout << items_in_bins[random_integer][j] << " ";
+        val += items_in_bins[random_integer][j];
+    }
+    cout << endl;
+
+    /*
     for(int i = 0; i < items_in_bins.size(); i++)
     {
         cout << "i = " << i << " => ";
@@ -673,7 +696,7 @@ int main(int argc, const char * argv[])
         }
         cout << " = " << val << endl;
     }
-
+    */
 
 
 
