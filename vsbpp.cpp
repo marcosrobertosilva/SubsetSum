@@ -656,6 +656,12 @@ int main(int argc, const char * argv[])
     individuo[49] = 49;
     */
 
+    // Guarda todos os pesos em um multimap tendo a chave o peso e o valor o número do item.
+    multimap <int, int> mymap;
+    for(int i = 0; i < items; i++)
+        mymap.insert(pair <int, int> (weight[i], i));
+
+
     // Faz o subset-sum usando o perfect sum (dynamic programming)
     vector< vector<int> > items_in_bins;
     int val = 0;
@@ -680,9 +686,19 @@ int main(int argc, const char * argv[])
     for(int j = 0; j < items_in_bins[random_integer].size(); j++)
     {
         cout << items_in_bins[random_integer][j] << " ";
-        val += items_in_bins[random_integer][j];
+        val = items_in_bins[random_integer][j];
+        // encontra o item com o referido peso.
+        multimap<int,int>::iterator it = mymap.lower_bound(val);
+        individuo.push_back(it->second);
+        mymap.erase(mymap.lower_bound(val));
     }
     cout << endl;
+
+    cout << "individuo\n";
+    for(vector<int>::iterator it = individuo.begin(); it != individuo.end(); it++)
+    {
+        cout << "item = " << *it << " - peso = " << weight[*it] << endl;
+    }
 
     /*
     for(int i = 0; i < items_in_bins.size(); i++)
