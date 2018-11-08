@@ -550,6 +550,13 @@ void sort(vector<int>  & weight, vector<int>  & individuo, int items)
     }
 }
 /******************************************************************************/
+void remove_val(vector<int> & v, int val)
+{
+	std::vector<int>::iterator position = std::find(v.begin(), v.end(), val);
+	if(position != v.end()) // == myVector.end() means the element was not found
+    	v.erase(position);
+}
+/******************************************************************************/
 int main(int argc, const char * argv[])
 {
     clock_t start;
@@ -656,43 +663,64 @@ int main(int argc, const char * argv[])
     individuo[49] = 49;
     */
 
-    // Guarda todos os pesos em um multimap tendo a chave o peso e o valor o número do item.
-    multimap <int, int> mymap;
-    for(int i = 0; i < items; i++)
-        mymap.insert(pair <int, int> (weight[i], i));
+    
 
 
     // Faz o subset-sum usando o perfect sum (dynamic programming)
     vector< vector<int> > items_in_bins;
+    vector<int> tmpw;
     int val = 0;
+    tmpw = weight;
 
-    printAllSubsets(weight, items, bin_for_subsetsum, items_in_bins);
+    // Guarda todos os pesos em um multimap tendo a chave o peso e o valor o número do item.
+    multimap <int, int> mymap;
+    for(int i = 0; i < tmpw.size(); i++)
+        mymap.insert(pair <int, int> (tmpw[i], i));
 
     // limpa o vetor individuo
     individuo.clear();
 
-    // insere uma sequencia aleatoria do subsetsum no individuo.
-    int qtd_combinacoes = items_in_bins.size();
-
-    int min = 0;
-    int max = qtd_combinacoes;
     std::random_device rd;     // only used once to initialise (seed) engine
     std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-    std::uniform_int_distribution<int> uni(min,max); // guaranteed unbiased
-
-    int random_integer = uni(rng);
-
-    cout << "random_integer = " << random_integer << endl;
-    for(int j = 0; j < items_in_bins[random_integer].size(); j++)
+    bool found = true;
+    
+    while(found)
     {
-        cout << items_in_bins[random_integer][j] << " ";
-        val = items_in_bins[random_integer][j];
-        // encontra o item com o referido peso.
-        multimap<int,int>::iterator it = mymap.lower_bound(val);
-        individuo.push_back(it->second);
-        mymap.erase(mymap.lower_bound(val));
+        if(tmpw.size() <= 0) { found = false; break; }
+
+        printAllSubsets(tmpw, tmpw.size(), bin_for_subsetsum, items_in_bins);
+        // insere uma sequencia aleatoria do subsetsum no individuo.
+        int qtd_combinacoes = items_in_bins.size();
+        cout << "qtd_combinacoes = " << qtd_combinacoes << endl;
+
+        if(qtd_combinacoes <= 0) { found = false; break; }
+        int min = 0;
+        int max = qtd_combinacoes;
+        std::uniform_int_distribution<int> uni(min,max); // guaranteed unbiased
+
+        int random_integer = uni(rng);
+        cout << "random_integer = " << random_integer << endl;
+        for(int j = 0; j < items_in_bins[random_integer].size(); j++)
+        {
+            cout << items_in_bins[random_integer][j] << " ";
+            cout << "OK\t";
+            val = items_in_bins[random_integer][j];
+            
+            // encontra o item com o referido peso.
+            multimap<int,int>::iterator it = mymap.lower_bound(val);
+            
+            individuo.push_back(it->second);
+            mymap.erase(mymap.lower_bound(val));
+            
+            tmpw.erase(tmpw.begin() + it->second);
+            cout << "OK\n";
+        }
+        cout << endl;
+        items_in_bins.clear();
+        mymap.clear();
+        for(int i = 0; i < tmpw.size(); i++) mymap.insert(pair <int, int> (tmpw[i], i));
     }
-    cout << endl;
+
 
     cout << "individuo\n";
     for(vector<int>::iterator it = individuo.begin(); it != individuo.end(); it++)
