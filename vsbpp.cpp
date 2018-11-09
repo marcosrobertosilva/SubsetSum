@@ -9,6 +9,9 @@
 #include <random>
 using namespace std;
 
+#include <boost/shared_ptr.hpp>
+#include "CItem.h"
+
 #define DEBUG 0
 
 
@@ -19,6 +22,7 @@ typedef struct move_info
     int j;
 } move_tabu;
 
+typedef boost::shared_ptr<CItem> item_ptr;
 
 /**********************************************************************
  *                                                                    *
@@ -557,6 +561,26 @@ void remove_val(vector<int> & v, int val)
     	v.erase(position);
 }
 /******************************************************************************/
+int searchIndex(vector<item_ptr> & vitems, int weight)
+{
+    int idx = -1;
+    bool found = false;
+    for(int i = 0; i < vitems.size(); i++)
+    {
+        if(vitems[i]->getWeight() == weight && !vitems[i]->getLoaded())
+        {
+            idx = i;
+            found = true;
+            break;
+        }
+    }
+    if(!found) cout << "\nitem com peso " << weight << " nao encontrado no vetor de items\n";
+    return idx;
+}
+/******************************************************************************/
+/******************************************************************************/
+/******************************************************************************/
+/******************************************************************************/
 int main(int argc, const char * argv[])
 {
     clock_t start;
@@ -569,6 +593,11 @@ int main(int argc, const char * argv[])
     vector<int> weight;
     vector<int> individuo;
     vector<int> bin_item;
+
+    vector<item_ptr> vitems;
+
+
+
     double myFitness = 0.0;
     int i;
     int iseed; /* semente para geracao de numeros aleatorios */
@@ -606,6 +635,16 @@ int main(int argc, const char * argv[])
     start = clock();
     for(i = 0; i < items; i++)
         individuo[i] = i;
+
+    // inicializa vector de objetos do tipo item
+    for(i = 0; i < items; i++)
+    {
+        item_ptr tmp(new CItem(i, weight[i]));
+        vitems.push_back(tmp);
+    }
+
+    for(vector<item_ptr>::iterator it = vitems.begin(); it != vitems.end(); ++it)
+        (*it)->printItem();
     
     sort(weight, individuo, items);
     shuffle(individuo, items, iseed);
@@ -705,14 +744,10 @@ int main(int argc, const char * argv[])
             cout << items_in_bins[random_integer][j] << " ";
             cout << "OK\t";
             val = items_in_bins[random_integer][j];
-            
-            // encontra o item com o referido peso.
-            multimap<int,int>::iterator it = mymap.lower_bound(val);
-            
-            individuo.push_back(it->second);
-            mymap.erase(mymap.lower_bound(val));
-            
-            tmpw.erase(tmpw.begin() + it->second);
+            int idx = searchIndex(vitems, val);
+            if(idx < 0) break;
+            vitems[idx]->setLoaded(true);
+            individuo.push_back(vitems[idx]->getNum());
             cout << "OK\n";
         }
         cout << endl;
