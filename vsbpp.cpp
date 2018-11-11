@@ -707,57 +707,55 @@ int main(int argc, const char * argv[])
 
     // Faz o subset-sum usando o perfect sum (dynamic programming)
     vector< vector<int> > items_in_bins;
-    vector<int> tmpw;
     int val = 0;
-    tmpw = weight;
-
-    // Guarda todos os pesos em um multimap tendo a chave o peso e o valor o número do item.
-    multimap <int, int> mymap;
-    for(int i = 0; i < tmpw.size(); i++)
-        mymap.insert(pair <int, int> (tmpw[i], i));
-
+    
     // limpa o vetor individuo
     individuo.clear();
 
-    std::random_device rd;     // only used once to initialise (seed) engine
-    std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-    bool found = true;
-    
     while(found)
     {
-        if(tmpw.size() <= 0) { found = false; break; }
-
-        printAllSubsets(tmpw, tmpw.size(), bin_for_subsetsum, items_in_bins);
-        // insere uma sequencia aleatoria do subsetsum no individuo.
+        printAllSubsets(weight, weight.size(), bin_for_subsetsum, items_in_bins);
         int qtd_combinacoes = items_in_bins.size();
         cout << "qtd_combinacoes = " << qtd_combinacoes << endl;
-
         if(qtd_combinacoes <= 0) { found = false; break; }
-        int min = 0;
-        int max = qtd_combinacoes;
-        std::uniform_int_distribution<int> uni(min,max); // guaranteed unbiased
-
-        int random_integer = uni(rng);
-        cout << "random_integer = " << random_integer << endl;
-        for(int j = 0; j < items_in_bins[random_integer].size(); j++)
+        vector<int> vItensCandidatos;
+        bool is_candidate = false;
+        int idx = -1;
+        for(int i = 0; i < qtd_combinacoes; i++)
         {
-            cout << items_in_bins[random_integer][j] << " ";
-            cout << "OK\t";
-            val = items_in_bins[random_integer][j];
-            int idx = searchIndex(vitems, val);
-            if(idx < 0) break;
-            vitems[idx]->setLoaded(true);
-            individuo.push_back(vitems[idx]->getNum());
-            cout << "OK\n";
+            vItensCandidatos.clear();
+            idx = -1;
+            is_candidate = true;
+            for(int j = 0; j < items_in_bins[i].size(); j++)
+            {
+                val = items_in_bins[i][j];
+                idx = searchIndex(vitems, val);
+                if(idx < 0)
+                {
+                    is_candidate = false; 
+                    break;
+                } 
+                vItensCandidatos.push_back(idx);
+            }
+            if(is_candidate)
+            {
+                cout << "entrou\n";
+                individuo.reserve(individuo.size() + vItensCandidatos.size());
+                individuo.insert(individuo.end(), vItensCandidatos.begin(), vItensCandidatos.end());
+                for(vector<int>::iterator it = vItensCandidatos.begin(); it != vItensCandidatos.end(); ++it)
+                    vitems[(*it)]->setLoaded(true);
+            }
         }
+        found = false;
         cout << endl;
         items_in_bins.clear();
-        mymap.clear();
-        for(int i = 0; i < tmpw.size(); i++) mymap.insert(pair <int, int> (tmpw[i], i));
     }
+
+    
 
 
     cout << "individuo\n";
+    cout << "Individuo size = " << individuo.size() << endl;
     for(vector<int>::iterator it = individuo.begin(); it != individuo.end(); it++)
     {
         cout << "item = " << *it << " - peso = " << weight[*it] << endl;
