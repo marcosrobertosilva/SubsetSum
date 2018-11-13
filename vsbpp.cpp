@@ -7,6 +7,7 @@
 #include <vector>
 #include <bits/stdc++.h>
 #include <random>
+#include <algorithm>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -708,47 +709,59 @@ int main(int argc, const char * argv[])
     // Faz o subset-sum usando o perfect sum (dynamic programming)
     vector< vector<int> > items_in_bins;
     int val = 0;
+
+    std::sort(binCap.begin(), binCap.end(), std::greater<int>());
+    std::sort(binCost.begin(), binCost.end(), std::greater<int>());
     
     // limpa o vetor individuo
     individuo.clear();
 
-    while(found)
+    for(vector<int>::iterator b_it = binCap.begin(); b_it != binCap.end(); b_it++)
     {
-        printAllSubsets(weight, weight.size(), bin_for_subsetsum, items_in_bins);
-        int qtd_combinacoes = items_in_bins.size();
-        cout << "qtd_combinacoes = " << qtd_combinacoes << endl;
-        if(qtd_combinacoes <= 0) { found = false; break; }
-        vector<int> vItensCandidatos;
-        bool is_candidate = false;
-        int idx = -1;
-        for(int i = 0; i < qtd_combinacoes; i++)
+        bool found = true;
+        while(found)
         {
-            vItensCandidatos.clear();
-            idx = -1;
-            is_candidate = true;
-            for(int j = 0; j < items_in_bins[i].size(); j++)
+            printAllSubsets(weight, weight.size(), *b_it, items_in_bins);
+            int qtd_combinacoes = items_in_bins.size();
+            cout << "qtd_combinacoes = " << qtd_combinacoes << endl;
+            if(qtd_combinacoes <= 0) { found = false; break; }
+            vector<int> vItensCandidatos;
+            bool is_candidate = false;
+            int idx = -1;
+            for(int i = 0; i < qtd_combinacoes; i++)
             {
-                val = items_in_bins[i][j];
-                idx = searchIndex(vitems, val);
-                if(idx < 0)
+                cout << i << ") ";
+                vItensCandidatos.clear();
+                idx = -1;
+                is_candidate = true;
+                vector<item_ptr> vtmp_items;
+                vtmp_items = vitems;
+                for(int j = 0; j < items_in_bins[i].size(); j++)
                 {
-                    is_candidate = false; 
-                    break;
-                } 
-                vItensCandidatos.push_back(idx);
+                    val = items_in_bins[i][j];
+                    cout << val << " ";
+                    idx = searchIndex(vtmp_items, val);
+                    if(idx < 0)
+                    {
+                        is_candidate = false; 
+                        break;
+                    } 
+                    vItensCandidatos.push_back(idx);
+                    vtmp_items[idx]->setLoaded(true);
+                }
+                if(is_candidate)
+                {
+                    cout << "entrou\n";
+                    individuo.reserve(individuo.size() + vItensCandidatos.size());
+                    individuo.insert(individuo.end(), vItensCandidatos.begin(), vItensCandidatos.end());
+                    for(vector<int>::iterator it = vItensCandidatos.begin(); it != vItensCandidatos.end(); ++it)
+                        vitems[(*it)]->setLoaded(true);
+                }
             }
-            if(is_candidate)
-            {
-                cout << "entrou\n";
-                individuo.reserve(individuo.size() + vItensCandidatos.size());
-                individuo.insert(individuo.end(), vItensCandidatos.begin(), vItensCandidatos.end());
-                for(vector<int>::iterator it = vItensCandidatos.begin(); it != vItensCandidatos.end(); ++it)
-                    vitems[(*it)]->setLoaded(true);
-            }
+            found = false;
+            cout << endl;
+            items_in_bins.clear();
         }
-        found = false;
-        cout << endl;
-        items_in_bins.clear();
     }
 
     
@@ -756,9 +769,34 @@ int main(int argc, const char * argv[])
 
     cout << "individuo\n";
     cout << "Individuo size = " << individuo.size() << endl;
+    i = 0;
+    
     for(vector<int>::iterator it = individuo.begin(); it != individuo.end(); it++)
     {
-        cout << "item = " << *it << " - peso = " << weight[*it] << endl;
+        cout << i << ") item = " << *it << " - peso = " << weight[*it] << endl;
+        i++;
+    }
+
+    if(individuo.size() < items)
+    {
+        for(i = 0; i < items; i++)
+        {
+            if(std::find(individuo.begin(), individuo.end(), i) != individuo.end())
+            {
+                // found! do nothing!
+            } else {
+                individuo.push_back(i);
+            }
+        }
+    }
+
+    cout << "Individuo apos complemento: " << endl;
+    i = 0;
+    
+    for(vector<int>::iterator it = individuo.begin(); it != individuo.end(); it++)
+    {
+        cout << i << ") item = " << *it << " - peso = " << weight[*it] << endl;
+        i++;
     }
 
     /*
